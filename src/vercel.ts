@@ -4,12 +4,14 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import express from 'express';
 
-const expressApp = express();
+// Cache the server instance
+let server: any;
 
-const createNestServer = async (expressInstance) => {
+const bootstrap = async () => {
+    const expressApp = express();
     const app = await NestFactory.create(
         AppModule,
-        new ExpressAdapter(expressInstance),
+        new ExpressAdapter(expressApp),
     );
 
     const config = new DocumentBuilder()
@@ -21,12 +23,14 @@ const createNestServer = async (expressInstance) => {
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api/docs', app, document);
 
-    // Enable CORS
     app.enableCors();
-
     await app.init();
+    return expressApp;
 };
 
-createNestServer(expressApp);
-
-export default expressApp;
+export default async (req, res) => {
+    if (!server) {
+        server = await bootstrap();
+    }
+    return server(req, res);
+};
