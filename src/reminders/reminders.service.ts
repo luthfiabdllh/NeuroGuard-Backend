@@ -1,26 +1,52 @@
 import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateReminderDto } from './dto/create-reminder.dto';
 import { UpdateReminderDto } from './dto/update-reminder.dto';
 
 @Injectable()
+@Injectable()
 export class RemindersService {
+    constructor(private prisma: PrismaService) { }
+
     create(createReminderDto: CreateReminderDto) {
-        return 'This action adds a new reminder';
+        return this.prisma.predictionReminder.create({
+            data: {
+                user_id: createReminderDto.user_id,
+                frequency_days: createReminderDto.frequency_days,
+                next_reminder_date: new Date(createReminderDto.next_reminder_date),
+                is_active: createReminderDto.is_active,
+            },
+        });
     }
 
     findAll() {
-        return `This action returns all reminders`;
+        return this.prisma.predictionReminder.findMany({
+            include: { user: true },
+        });
     }
 
-    findOne(id: number) {
-        return `This action returns a #${id} reminder`;
+    findOne(id: string) {
+        return this.prisma.predictionReminder.findUnique({
+            where: { id },
+            include: { user: true },
+        });
     }
 
-    update(id: number, updateReminderDto: UpdateReminderDto) {
-        return `This action updates a #${id} reminder`;
+    update(id: string, updateReminderDto: UpdateReminderDto) {
+        return this.prisma.predictionReminder.update({
+            where: { id },
+            data: {
+                ...updateReminderDto,
+                next_reminder_date: updateReminderDto.next_reminder_date
+                    ? new Date(updateReminderDto.next_reminder_date)
+                    : undefined,
+            },
+        });
     }
 
-    remove(id: number) {
-        return `This action removes a #${id} reminder`;
+    remove(id: string) {
+        return this.prisma.predictionReminder.delete({
+            where: { id },
+        });
     }
 }
