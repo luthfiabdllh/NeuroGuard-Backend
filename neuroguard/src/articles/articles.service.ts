@@ -12,15 +12,15 @@ export class ArticlesService {
         return `This action returns all articles`;
     }
 
-    findOne(id: number) {
+    findOne(id: string) {
         return `This action returns a #${id} article`;
     }
 
-    update(id: number, updateArticleDto: UpdateArticleDto) {
+    update(id: string, updateArticleDto: UpdateArticleDto) {
         return `This action updates a #${id} article`;
     }
 
-    remove(id: number) {
+    remove(id: string) {
         return `This action removes a #${id} article`;
     }
 }
