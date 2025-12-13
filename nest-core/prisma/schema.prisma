@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  password   String
+  full_name  String
+  dob        DateTime
+  gender     String
+  created_at DateTime @default(now())
+
+  predictions    Prediction[]
+  reminders      PredictionReminder[]
+  saved_articles UserSavedArticle[]
+
+  @@map("users")
+}
+
+model Prediction {
+  id                 String   @id @default(uuid())
+  user_id            String
+  height             Float
+  weight             Float
+  bmi                Float
+  glucose            Float
+  hypertension       Int // 0 or 1
+  heart_disease      Int // 0 or 1
+  smoking            String // Status
+  stroke_probability Float
+  risk_label         String
+  created_at         DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id])
+
+  @@map("predictions")
+}
+
+model PredictionReminder {
+  id                 String   @id @default(uuid())
+  user_id            String
+  frequency_days     Int
+  next_reminder_date DateTime
+  is_active          Boolean  @default(true)
+
+  user User @relation(fields: [user_id], references: [id])
+
+  @@map("prediction_reminders")
+}
+
+model ArticleCategory {
+  id   String  @id @default(uuid())
+  name String
+  icon String?
+
+  articles Article[]
+
+  @@map("article_categories")
+}
+
+model Article {
+  id           String   @id @default(uuid())
+  category_id  String
+  title        String
+  content      String
+  image_url    String?
+  published_at DateTime @default(now())
+
+  category ArticleCategory    @relation(fields: [category_id], references: [id])
+  saved_by UserSavedArticle[]
+
+  @@map("articles")
+}
+
+model UserSavedArticle {
+  id         String   @id @default(uuid())
+  user_id    String
+  article_id String
+  saved_at   DateTime @default(now())
+
+  user    User    @relation(fields: [user_id], references: [id])
+  article Article @relation(fields: [article_id], references: [id])
+
+  @@map("user_saved_articles")
+}
