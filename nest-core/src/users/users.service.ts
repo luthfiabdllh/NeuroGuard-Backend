@@ -43,4 +43,13 @@ export class UsersService {
   remove(id: string) {
     return this.prisma.user.delete({ where: { id } });
   }
+
+  async updateRefreshToken(id: string, refreshToken: string | null) {
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        refresh_token: refreshToken,
+      },
+    });
+  }
 }

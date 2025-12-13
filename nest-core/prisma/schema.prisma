@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -14,7 +15,8 @@ model User {
   full_name  String
   dob        DateTime
   gender     String
-  created_at DateTime @default(now())
+  created_at    DateTime @default(now())
+  refresh_token String?
 
   predictions    Prediction[]
   reminders      PredictionReminder[]

@@ -26,14 +26,72 @@ export class AuthService {
         if (!user) {
             throw new UnauthorizedException('Invalid credentials');
         }
-        const payload = { email: user.email, sub: user.id };
+
+        const tokens = await this.getTokens(user.id, user.email);
+        await this.updateRefreshToken(user.id, tokens.refresh_token);
+
         return {
-            access_token: this.jwtService.sign(payload),
+            ...tokens,
             user,
         };
     }
 
     async register(createUserDto: CreateUserDto) {
         return this.usersService.create(createUserDto);
+    }
+
+    async logout(userId: string) {
+        return this.usersService.updateRefreshToken(userId, null);
+    }
+
+    async refreshTokens(userId: string, refreshToken: string) {
+        const user = await this.usersService.findOne(userId);
+        if (!user || !user.refresh_token) {
+            throw new UnauthorizedException('Access Denied');
+        }
+
+        const refreshTokenMatches = await bcrypt.compare(refreshToken, user.refresh_token);
+        if (!refreshTokenMatches) {
+            throw new UnauthorizedException('Access Denied');
+        }
+
+        const tokens = await this.getTokens(user.id, user.email);
+        await this.updateRefreshToken(user.id, tokens.refresh_token);
+        return tokens;
+    }
+
+    async updateRefreshToken(userId: string, refreshToken: string) {
+        const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+        await this.usersService.updateRefreshToken(userId, hashedRefreshToken);
+    }
+
+    async getTokens(userId: string, email: string) {
+        const [at, rt] = await Promise.all([
+            this.jwtService.signAsync(
+                {
+                    sub: userId,
+                    email,
+                },
+                {
+                    secret: 'super-secret-key', // Env var ideally
+                    expiresIn: '15m',
+                },
+            ),
+            this.jwtService.signAsync(
+                {
+                    sub: userId,
+                    email,
+                },
+                {
+                    secret: 'refresh-secret-key', // Env var ideally
+                    expiresIn: '7d',
+                },
+            ),
+        ]);
+
+        return {
+            access_token: at,
+            refresh_token: rt,
+        };
     }
 }
