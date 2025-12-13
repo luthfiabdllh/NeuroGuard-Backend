@@ -51,7 +51,7 @@ export class PredictionsService {
     };
 
     // 4. Call AI Service
-    const aiUrl = this.configService.get<string>('AI_SERVICE_URL') || 'http://localhost:8000';
+    const aiUrl = this.configService.get<string>('AI_SERVICE_URL');
 
     let aiResult;
     try {
