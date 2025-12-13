@@ -15,19 +15,43 @@ export class PredictionsService {
   ) { }
 
   async create(createPredictionDto: CreatePredictionDto, userId: string) {
-    // 1. Calculate BMI
+    // 0. Fetch User Details for Age and Gender
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // 1. Calculate Age
+    const today = new Date();
+    const dob = new Date(user.dob);
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+      age--;
+    }
+
+    // 2. Calculate BMI
     // Height is in cm, convert to meters
     const heightInMeters = createPredictionDto.height / 100;
     const bmi = createPredictionDto.weight / (heightInMeters * heightInMeters);
 
-    // 2. Call AI Service
-    const aiUrl = this.configService.get<string>('AI_SERVICE_URL') || 'http://localhost:8000';
-    // Align payload with what AI expects. sending everything + calculated BMI? 
-    // Assuming AI needs BMI.
+    // 3. Prepare Payload for AI Service
+    // Matches: { gender, age, hypertension, heart_disease, ever_married, work_type, Residence_type, avg_glucose_level, bmi, smoking_status }
     const payload = {
-      ...createPredictionDto,
+      gender: user.gender, // Assumes 'Male'/'Female' stored in User matches AI expectation
+      age: parseFloat(age.toString()),
+      hypertension: createPredictionDto.hypertension,
+      heart_disease: createPredictionDto.heart_disease,
+      ever_married: createPredictionDto.ever_married,
+      work_type: createPredictionDto.work_type,
+      Residence_type: createPredictionDto.Residence_type,
+      avg_glucose_level: createPredictionDto.avg_glucose_level,
       bmi: parseFloat(bmi.toFixed(2)),
+      smoking_status: createPredictionDto.smoking_status,
     };
+
+    // 4. Call AI Service
+    const aiUrl = this.configService.get<string>('AI_SERVICE_URL') || 'http://localhost:8000';
 
     let aiResult;
     try {
@@ -36,24 +60,27 @@ export class PredictionsService {
       );
       aiResult = response.data;
     } catch (error) {
-      // Fallback or error. For now mock if failed? 
-      // Or throw error.
-      // Mocking for development if AI service not up
-      console.warn("AI Service failed, using dummy data");
-      aiResult = { stroke_probability: 0.1, risk_label: 'Low Risk' };
+      console.warn("AI Service failed, using dummy data. Error:", error.message);
+      // Fallback or error. 
+      aiResult = { stroke_probability: 0.1, risk_label: 'Low Risk (Fallback)' };
     }
 
-    // 3. Save to DB
+    // 5. Save to DB
     return this.prisma.prediction.create({
       data: {
         user_id: userId,
+        gender: user.gender,
+        age: age,
         height: createPredictionDto.height,
         weight: createPredictionDto.weight,
         bmi: parseFloat(bmi.toFixed(2)),
-        glucose: createPredictionDto.glucose,
+        avg_glucose_level: createPredictionDto.avg_glucose_level,
         hypertension: createPredictionDto.hypertension,
         heart_disease: createPredictionDto.heart_disease,
-        smoking: createPredictionDto.smoking,
+        smoking_status: createPredictionDto.smoking_status,
+        example_married: createPredictionDto.ever_married,
+        work_type: createPredictionDto.work_type,
+        residence_type: createPredictionDto.Residence_type,
         stroke_probability: aiResult.stroke_probability,
         risk_label: aiResult.risk_label,
       },

@@ -26,13 +26,18 @@ model User {
 model Prediction {
   id                 String   @id @default(uuid())
   user_id            String
+  gender             String // Snapshot from user profile
+  age                Float    // Calculated from DOB
   height             Float
   weight             Float
   bmi                Float
-  glucose            Float
-  hypertension       Int // 0 or 1
-  heart_disease      Int // 0 or 1
-  smoking            String // Status
+  avg_glucose_level  Float
+  hypertension       Int      // 0 or 1
+  heart_disease      Int      // 0 or 1
+  example_married    String?  @map("ever_married") // Optional in DB if legacy data exists, but we'll require it
+  work_type          String
+  residence_type     String
+  smoking_status     String
   stroke_probability Float
   risk_label         String
   created_at         DateTime @default(now())
