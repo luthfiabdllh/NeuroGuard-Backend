@@ -8,7 +8,7 @@ export class CreatePredictionDto {
     weight: number;
 
     @IsNumber()
-    glucose: number;
+    avg_glucose_level: number;
 
     @IsNumber()
     hypertension: number;
@@ -17,5 +17,18 @@ export class CreatePredictionDto {
     heart_disease: number;
 
     @IsString()
-    smoking: string;
+    @IsNotEmpty()
+    ever_married: string;
+
+    @IsString()
+    @IsNotEmpty()
+    work_type: string;
+
+    @IsString()
+    @IsNotEmpty()
+    Residence_type: string;
+
+    @IsString()
+    @IsNotEmpty()
+    smoking_status: string;
 }
