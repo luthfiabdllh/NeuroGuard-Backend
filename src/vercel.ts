@@ -13,6 +13,7 @@ const bootstrap = async () => {
         AppModule,
         new ExpressAdapter(expressApp),
     );
+    app.setGlobalPrefix('api');
 
     const config = new DocumentBuilder()
         .setTitle('NeuroGuard API')
@@ -21,7 +22,7 @@ const bootstrap = async () => {
         .addBearerAuth()
         .build();
     const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api/docs', app, document);
+    SwaggerModule.setup('docs', app, document);
 
     app.enableCors();
     await app.init();
