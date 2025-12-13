@@ -62,7 +62,7 @@ export class PredictionsService {
     } catch (error) {
       console.warn("AI Service failed, using dummy data. Error:", error.message);
       // Fallback or error. 
-      aiResult = { stroke_probability: 0.1, risk_label: 'Low Risk (Fallback)' };
+      aiResult = { probability: 0.1, risk_level: 'Low Risk (Fallback)' };
     }
 
     // 5. Save to DB
@@ -81,8 +81,8 @@ export class PredictionsService {
         example_married: createPredictionDto.ever_married,
         work_type: createPredictionDto.work_type,
         residence_type: createPredictionDto.Residence_type,
-        stroke_probability: aiResult.stroke_probability,
-        risk_label: aiResult.risk_label,
+        stroke_probability: aiResult.probability,
+        risk_label: aiResult.risk_level,
       },
     });
   }
