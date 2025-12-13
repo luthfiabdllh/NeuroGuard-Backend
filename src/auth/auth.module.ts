@@ -16,7 +16,7 @@ import { RefreshTokenStrategy } from './refresh-token.strategy';
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET') || 'secretKey', // Fallback for Access Token
-        signOptions: { expiresIn: '60s' }, // Short lifetime for testing refresh
+        signOptions: { expiresIn: '1h' }, // Increased lifetime for production usage
       }),
       inject: [ConfigService],
     }),
