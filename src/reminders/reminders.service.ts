@@ -8,20 +8,25 @@ import { UpdateReminderDto } from './dto/update-reminder.dto';
 export class RemindersService {
     constructor(private prisma: PrismaService) { }
 
-    create(createReminderDto: CreateReminderDto) {
+    create(createReminderDto: CreateReminderDto, userId: string) {
+        // Calculate next reminder date based on frequency if not provided or valid
+        const nextDate = new Date();
+        nextDate.setDate(nextDate.getDate() + createReminderDto.frequency_days);
+
         return this.prisma.predictionReminder.create({
             data: {
-                user_id: createReminderDto.user_id,
+                user_id: userId,
                 frequency_days: createReminderDto.frequency_days,
-                next_reminder_date: new Date(createReminderDto.next_reminder_date),
+                next_reminder_date: createReminderDto.next_reminder_date ? new Date(createReminderDto.next_reminder_date) : nextDate,
                 is_active: createReminderDto.is_active,
             },
         });
     }
 
-    findAll() {
+    findAll(userId: string) {
         return this.prisma.predictionReminder.findMany({
-            include: { user: true },
+            where: { user_id: userId },
+            include: { user: false }, // Don't need user details in list
         });
     }
 

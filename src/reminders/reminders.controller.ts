@@ -1,20 +1,25 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
 import { RemindersService } from './reminders.service';
 import { CreateReminderDto } from './dto/create-reminder.dto';
 import { UpdateReminderDto } from './dto/update-reminder.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Reminders')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('reminders')
 export class RemindersController {
     constructor(private readonly remindersService: RemindersService) { }
 
     @Post()
-    create(@Body() createReminderDto: CreateReminderDto) {
-        return this.remindersService.create(createReminderDto);
+    create(@Body() createReminderDto: CreateReminderDto, @Request() req) {
+        return this.remindersService.create(createReminderDto, req.user.id);
     }
 
     @Get()
-    findAll() {
-        return this.remindersService.findAll();
+    findAll(@Request() req) {
+        return this.remindersService.findAll(req.user.id);
     }
 
     @Get(':id')
