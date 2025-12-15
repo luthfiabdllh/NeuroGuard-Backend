@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config'; // Added import
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 import { CreateUserDto } from '../users/dto/create-user.dto';
@@ -10,6 +11,7 @@ export class AuthService {
     constructor(
         private usersService: UsersService,
         private jwtService: JwtService,
+        private configService: ConfigService, // Injected
     ) { }
 
     async validateUser(email: string, pass: string): Promise<any> {
@@ -73,7 +75,7 @@ export class AuthService {
                     email,
                 },
                 {
-                    secret: 'secretKey', // MATCH with JwtStrategy fallback
+                    secret: this.configService.get<string>('JWT_SECRET') || 'secretKey', // Match JwtStrategy
                     expiresIn: '15m',
                 },
             ),
@@ -83,7 +85,7 @@ export class AuthService {
                     email,
                 },
                 {
-                    secret: 'refresh-secret-key', // Env var ideally
+                    secret: this.configService.get<string>('JWT_REFRESH_SECRET') || 'refresh-secret-key',
                     expiresIn: '7d',
                 },
             ),
