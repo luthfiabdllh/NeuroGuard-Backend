@@ -38,4 +38,65 @@ export class ArticlesService {
             where: { id },
         });
     }
+
+    async saveArticle(userId: string, articleId: string) {
+        // Check if already saved to avoid duplicates (optional, or rely on unique constraints if any)
+        const existing = await this.prisma.userSavedArticle.findFirst({
+            where: {
+                user_id: userId,
+                article_id: articleId,
+            },
+        });
+
+        if (existing) {
+            return existing;
+        }
+
+        return this.prisma.userSavedArticle.create({
+            data: {
+                user_id: userId,
+                article_id: articleId,
+            },
+        });
+    }
+
+    async unsaveArticle(userId: string, articleId: string) {
+        // Find the record first
+        const savedRecord = await this.prisma.userSavedArticle.findFirst({
+            where: {
+                user_id: userId,
+                article_id: articleId,
+            },
+        });
+
+        if (!savedRecord) {
+            return { count: 0 }; // Or throw error
+        }
+
+        return this.prisma.userSavedArticle.delete({
+            where: { id: savedRecord.id },
+        });
+    }
+
+    async findAllSaved(userId: string) {
+        return this.prisma.userSavedArticle.findMany({
+            where: { user_id: userId },
+            include: {
+                article: {
+                    include: { category: true }
+                }
+            },
+            orderBy: { saved_at: 'desc' }
+        });
+    }
+
+    async checkIsSaved(userId: string, articleId: string) {
+        const count = await this.prisma.userSavedArticle.count({
+            where: {
+                user_id: userId,
+                article_id: articleId,
+            }
+        });
+        return { isSaved: count > 0 };
+    }
 }

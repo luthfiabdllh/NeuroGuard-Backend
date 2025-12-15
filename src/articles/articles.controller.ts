@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common'; // Added UseGuards, Request
 import { ArticlesService } from './articles.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @ApiTags('Articles')
 @Controller('articles')
@@ -19,6 +20,38 @@ export class ArticlesController {
     @ApiOperation({ summary: 'List all articles' })
     findAll() {
         return this.articlesService.findAll();
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @Get('saved/all') // Changed path to avoid conflict with :id if purely 'saved' might be ambiguous, though 'saved' is strict string. Let's use 'saved/all' or just 'saved' but place it before :id
+    @ApiOperation({ summary: 'Get all saved articles for current user' })
+    findAllSaved(@Request() req) {
+        return this.articlesService.findAllSaved(req.user.userId);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @Post(':id/save')
+    @ApiOperation({ summary: 'Save an article' })
+    saveArticle(@Param('id') id: string, @Request() req) {
+        return this.articlesService.saveArticle(req.user.userId, id);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @Delete(':id/save')
+    @ApiOperation({ summary: 'Unsave an article' })
+    unsaveArticle(@Param('id') id: string, @Request() req) {
+        return this.articlesService.unsaveArticle(req.user.userId, id);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @Get(':id/is-saved')
+    @ApiOperation({ summary: 'Check if article is saved' })
+    checkIsSaved(@Param('id') id: string, @Request() req) {
+        return this.articlesService.checkIsSaved(req.user.userId, id);
     }
 
     @Get(':id')
