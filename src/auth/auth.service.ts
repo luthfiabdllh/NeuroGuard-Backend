@@ -73,7 +73,7 @@ export class AuthService {
                     email,
                 },
                 {
-                    secret: 'super-secret-key', // Env var ideally
+                    secret: 'secretKey', // MATCH with JwtStrategy fallback
                     expiresIn: '15m',
                 },
             ),
